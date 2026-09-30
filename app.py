@@ -1,5 +1,3 @@
-Kalo pake yg ini tadi aman
-
 import io
 import os
 import json
