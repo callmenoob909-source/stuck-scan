@@ -1,6 +1,7 @@
 import io
 import os
 import json
+import time
 import pandas as pd
 import streamlit as st
 from google import genai
@@ -43,11 +44,22 @@ if uploaded_files and api_key:
                     Jangan tambahkan teks pembuka atau penutup, pastikan format JSON valid.
                     """
 
-                    # Menggunakan model gemini-2.5-flash atau gemini-2.5-flash-lite yang stabil
-                    response = client.models.generate_content(
-                        model="gemini-3.8-flash",
-                        contents=[image, prompt]
-                    )
+                    # Menggunakan model stabil gemini-3.8-flash dengan sistem percobaan ulang jika sibuk
+                    response = None
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            response = client.models.generate_content(
+                                model="gemini-3.8-flash",
+                                contents=[image, prompt]
+                            )
+                            break
+                        except Exception as err:
+                            if "503" in str(err) and attempt < max_retries - 1:
+                                time.sleep(2) # Tunggu 2 detik sebelum coba lagi
+                                continue
+                            else:
+                                raise err
 
                     clean_text = response.text.strip().replace("```json", "").replace("```", "").strip()
                     items = json.loads(clean_text)
