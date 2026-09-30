@@ -29,14 +29,6 @@ st.markdown("""
         color: #4B5563;
         margin-bottom: 2rem;
     }
-    .card {
-        padding: 1.5rem;
-        border-radius: 12px;
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1.5rem;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -104,7 +96,6 @@ with col2:
                         Jangan tambahkan teks pembuka atau penutup, pastikan format JSON valid.
                         """
 
-                        # Sistem Auto-Retry pengaman jika server padat (Error 503)
                         response = None
                         max_retries = 3
                         for attempt in range(max_retries):
@@ -135,7 +126,6 @@ with col2:
                         if col not in df.columns:
                             df[col] = ""
 
-                    # Simpan data ke session state agar tetap tampil
                     st.session_state['df_result'] = df
                     st.success("🎉 Pemindaian struk berhasil diselesaikan!")
 
@@ -146,13 +136,17 @@ with col2:
     elif not api_key:
         st.warning("⚠️ Masukkan API Key terlebih dahulu.")
 
-# Bagian Tabel Preview & Tombol Download di Bawah (Full Width)
+# Bagian Tabel Preview & Tombol Download di Bawah
 if 'df_result' in st.session_state and not st.session_state['df_result'].empty:
     st.markdown("---")
     st.markdown("### 📊 Pratinjau Tabel Data Hasil Ekstraksi")
-    st.dataframe(st.session_state['df_result'], use_container_width=True)
+    
+    # Membuat tabel preview dengan nomor urut mulai dari 1 dan menyembunyikan index 0
+    df_display = st.session_state['df_result'].copy()
+    df_display.insert(0, 'No', range(1, len(df_display) + 1))
+    st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-    # Buat file Excel dalam memori
+    # Buat file Excel dalam memori (tanpa kolom 'No' tambahan agar file Excel bersih)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         st.session_state['df_result'].to_excel(writer, index=False, sheet_name="Data Struk")
@@ -166,5 +160,5 @@ if 'df_result' in st.session_state and not st.session_state['df_result'].empty:
             file_name="Hasil_Scan_Struk_Profesional.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
-                                )
+        )
         
