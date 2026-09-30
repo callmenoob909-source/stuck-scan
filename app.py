@@ -20,6 +20,13 @@ if not api_key:
 
 uploaded_files = st.file_uploader("Pilih atau seret foto struk di sini (bisa lebih dari 1 foto):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
+# Tampilkan preview gambar yang di-upload agar memastikan foto sudah masuk
+if uploaded_files:
+    st.markdown("### Preview Foto Struk:")
+    for uploaded_file in uploaded_files:
+        image = Image.open(uploaded_file)
+        st.image(image, caption=uploaded_file.name, use_container_width=True)
+
 if uploaded_files and api_key:
     if st.button("🚀 Proses Semua Struk"):
         with st.spinner("Sedang memindai struk dan merapikan data menggunakan AI..."):
@@ -44,19 +51,18 @@ if uploaded_files and api_key:
                     Jangan tambahkan teks pembuka atau penutup, pastikan format JSON valid.
                     """
 
-                    # Menggunakan model stabil gemini-3.8-flash dengan sistem percobaan ulang jika sibuk
                     response = None
                     max_retries = 3
                     for attempt in range(max_retries):
                         try:
                             response = client.models.generate_content(
-                                model="gemini-3.5-flash",
+                                model="gemini-2.5-flash",
                                 contents=[image, prompt]
                             )
                             break
                         except Exception as err:
                             if "503" in str(err) and attempt < max_retries - 1:
-                                time.sleep(2) # Tunggu 2 detik sebelum coba lagi
+                                time.sleep(2)
                                 continue
                             else:
                                 raise err
