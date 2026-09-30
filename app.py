@@ -20,7 +20,6 @@ if not api_key:
 
 uploaded_files = st.file_uploader("Pilih atau seret foto struk di sini (bisa lebih dari 1 foto):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-# Tampilkan preview gambar yang di-upload agar memastikan foto sudah masuk
 if uploaded_files:
     st.markdown("### Preview Foto Struk:")
     for uploaded_file in uploaded_files:
@@ -42,30 +41,19 @@ if uploaded_files and api_key:
                     Ekstrak semua item produk/menu yang dibeli atau tertera di dalam struk.
                     Untuk setiap item, tentukan:
                     1. Nama barang/menu (nama_barang)
-                    2. Harga beli (harga_beli)
-                    3. Harga jual (harga_jual)
-                    4. Stok / Kuantitas (stok)
+                    2. Harga beli satuan/total per baris (harga_beli) -> masukkan nilai angka murni saja tanpa titik/koma/Rp.
+                    3. Harga jual (kosongkan atau isi null)
+                    4. Stok / Kuantitas (stok) -> angka kuantitas yang dibeli di struk.
                     
                     Keluarkan hasilnya HANYA dalam format JSON berupa list of dictionary dengan keys:
                     "nama_barang", "harga_beli", "harga_jual", "stok".
                     Jangan tambahkan teks pembuka atau penutup, pastikan format JSON valid.
                     """
 
-                    response = None
-                    max_retries = 3
-                    for attempt in range(max_retries):
-                        try:
-                            response = client.models.generate_content(
-                                model="gemini-3.5-flash",
-                                contents=[image, prompt]
-                            )
-                            break
-                        except Exception as err:
-                            if "503" in str(err) and attempt < max_retries - 1:
-                                time.sleep(2)
-                                continue
-                            else:
-                                raise err
+                    response = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[image, prompt]
+                    )
 
                     clean_text = response.text.strip().replace("```json", "").replace("```", "").strip()
                     items = json.loads(clean_text)
@@ -73,24 +61,28 @@ if uploaded_files and api_key:
 
                 df = pd.DataFrame(all_extracted_data)
                 
+                # Memastikan kolom sesuai standar
+                if "harga_jual" not in df.columns:
+                    df["harga_jual"] = ""
+                
                 expected_cols = ["nama_barang", "harga_beli", "harga_jual", "stok"]
                 for col in expected_cols:
                     if col not in df.columns:
                         df[col] = ""
 
                 st.success("✅ Berhasil memindai semua struk!")
-                st.subheader("Preview Data Gabungan:")
+                st.subheader("Preview Data Hasil Scan:")
                 st.dataframe(df, use_container_width=True)
 
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                    df.to_excel(writer, index=False, sheet_name="Data Gabungan")
+                    df.to_excel(writer, index=False, sheet_name="Data Struk")
                 excel_data = output.getvalue()
 
                 st.download_button(
                     label="📥 Unduh File Excel (.xlsx)",
                     data=excel_data,
-                    file_name="Hasil_Scan_Struk_Gabungan.xlsx",
+                    file_name="Hasil_Scan_Struk.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
