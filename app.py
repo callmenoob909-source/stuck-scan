@@ -150,9 +150,13 @@ with col2:
 if 'df_result' in st.session_state and not st.session_state['df_result'].empty:
     st.markdown("---")
     st.markdown("### 📊 Pratinjau Tabel Data Hasil Ekstraksi")
-    st.dataframe(st.session_state['df_result'], use_container_width=True)
+    
+    # Membuat tabel preview dengan nomor urut mulai dari 1 dan menyembunyikan index 0
+    df_display = st.session_state['df_result'].copy()
+    df_display.insert(0, 'No', range(1, len(df_display) + 1))
+    st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-    # Buat file Excel dalam memori
+    # Buat file Excel dalam memori (tanpa kolom 'No' tambahan agar file Excel bersih)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         st.session_state['df_result'].to_excel(writer, index=False, sheet_name="Data Struk")
