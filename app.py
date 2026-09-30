@@ -16,7 +16,6 @@ api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 if not api_key:
     api_key = st.text_input("Masukkan Google Gemini API Key Anda:", type="password")
-    st.info("💡 Tips: Anda bisa mendapatkan API Key gratis melalui [Google AI Studio](https://aistudio.google.com/).")
 
 uploaded_files = st.file_uploader("Pilih atau seret foto struk di sini (bisa lebih dari 1 foto):", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
@@ -34,16 +33,17 @@ if uploaded_files and api_key:
                     Analisis gambar struk belanja ini secara teliti.
                     Ekstrak semua item produk/menu yang dibeli atau tertera di dalam struk.
                     Untuk setiap item, tentukan:
-                    1. Nama barang/menu
-                    2. Harga beli (masukkan harga satuan atau total per item ke kolom harga beli jika ini struk pembelian/belanja, atau harga jual jika ini struk restoran/penjualan. Jika tidak ada sama sekali, kosongkan).
-                    3. Harga jual (kosongkan jika tidak ada).
-                    4. Stok / Kuantitas (jumlah barang yang dibeli/dipesan, jika tidak ada tulis 1).
+                    1. Nama barang/menu (nama_barang)
+                    2. Harga beli (harga_beli)
+                    3. Harga jual (harga_jual)
+                    4. Stok / Kuantitas (stok)
                     
                     Keluarkan hasilnya HANYA dalam format JSON berupa list of dictionary dengan keys:
                     "nama_barang", "harga_beli", "harga_jual", "stok".
                     Jangan tambahkan teks pembuka atau penutup, pastikan format JSON valid.
                     """
 
+                    # Menggunakan model gemini-2.5-flash atau gemini-2.5-flash-lite yang stabil
                     response = client.models.generate_content(
                         model="gemini-2.5-flash",
                         contents=[image, prompt]
@@ -78,3 +78,4 @@ if uploaded_files and api_key:
 
             except Exception as ec:
                 st.error(f"Terjadi kesalahan saat memproses data: {ec}")
+                
