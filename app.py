@@ -50,7 +50,7 @@ if uploaded_files and api_key:
                     for attempt in range(max_retries):
                         try:
                             response = client.models.generate_content(
-                                model="gemini-3.8-flash",
+                                model="gemini-3.5-flash",
                                 contents=[image, prompt]
                             )
                             break
