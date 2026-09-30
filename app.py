@@ -1,3 +1,5 @@
+Kalo pake yg ini tadi aman
+
 import io
 import os
 import json
@@ -42,7 +44,7 @@ with st.sidebar:
 
 # Header Utama
 st.markdown('<p class="main-header">🧾 Smart Receipt to Excel Converter</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Unggah foto struk belanjaan Anda, AI akan mengekstrak Nama Barang, Harga Beli, Harga Jual (kosong/siap isi), dan Stok secara instan.</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Unggah foto struk belanjaan Anda, AI akan mengekstrak Nama Barang, Harga Beli, Harga Jual, dan Stok secara instan.</p>', unsafe_allow_html=True)
 
 # Mengambil API Key secara aman dari Streamlit Secrets atau Input Sidebar
 api_key = st.secrets.get("GEMINI_API_KEY", "")
@@ -88,7 +90,7 @@ with col2:
                         Untuk setiap item, tentukan:
                         1. Nama barang/menu (nama_barang)
                         2. Harga beli satuan/total per baris (harga_beli) -> masukkan nilai angka murni saja tanpa titik/koma/Rp.
-                        3. Harga jual (harga_jual) -> kosongkan saja (isi dengan string kosong "" atau null).
+                        3. Harga jual (kosongkan atau isi null)
                         4. Stok / Kuantitas (stok) -> angka kuantitas yang dibeli di struk.
                         
                         Keluarkan hasilnya HANYA dalam format JSON berupa list of dictionary dengan keys:
@@ -114,22 +116,17 @@ with col2:
 
                         clean_text = response.text.strip().replace("```json", "").replace("```", "").strip()
                         items = json.loads(clean_text)
-                        
-                        # Pastikan kolom harga_jual benar-benar dikosongkan dari AI
-                        for item in items:
-                            item["harga_jual"] = ""
-                            
                         all_extracted_data.extend(items)
 
                     df = pd.DataFrame(all_extracted_data)
+                    
+                    if "harga_jual" not in df.columns:
+                        df["harga_jual"] = ""
                     
                     expected_cols = ["nama_barang", "harga_beli", "harga_jual", "stok"]
                     for col in expected_cols:
                         if col not in df.columns:
                             df[col] = ""
-                    
-                    # Paksa kolom harga_jual jadi string kosong
-                    df["harga_jual"] = ""
 
                     st.session_state['df_result'] = df
                     st.success("🎉 Pemindaian struk berhasil diselesaikan!")
@@ -166,4 +163,3 @@ if 'df_result' in st.session_state and not st.session_state['df_result'].empty:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
-        
